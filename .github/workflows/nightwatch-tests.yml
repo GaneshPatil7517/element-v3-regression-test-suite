@@ -5,12 +5,14 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [18.x, 20.x]
+        browser: [chrome, firefox]
 
     steps:
     - uses: actions/checkout@v2
@@ -24,7 +26,12 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - run: sudo apt-get install xvfb
+    - name: Install Firefox (if needed)
+      if: matrix.browser == 'firefox'
+      run: sudo apt-get update && sudo apt-get install -y firefox
 
-    - name: Run Nightwatch tests
-      run: xvfb-run --auto-servernum npm run ci-test
+    - name: Install XVFB
+      run: sudo apt-get install xvfb
+
+    - name: Run Nightwatch tests on ${{ matrix.browser }}
+      run: xvfb-run --auto-servernum npm run ci-test -- --env ${{ matrix.browser }}
